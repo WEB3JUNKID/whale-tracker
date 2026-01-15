@@ -1,7 +1,7 @@
 {
-  "name": "kaito-whale-tracker",
-  "version": "1.0.0",
-  "description": "Whale tracker for Render",
+  "name": "kaito-whale-radar",
+  "version": "2.1.0",
+  "description": "Real-time Whale Tracking with USD valuation and CEX detection",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
@@ -9,10 +9,6 @@
   "dependencies": {
     "express": "^4.18.2",
     "ethers": "^6.7.1",
-    "node-fetch": "^2.6.11",
-    "dotenv": "^16.3.1"
-  },
-  "engines": {
-    "node": ">=16.0.0"
+    "node-fetch": "^2.6.11"
   }
 }
