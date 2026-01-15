@@ -1,14 +1,20 @@
 {
   "KAITO_CONTRACT": "0x31a7d612788277457c03e34ecd4efe4d6e6a8e39",
   "TARGET_WHALES": [
-    { "name": "Rank 1 (Foundation)", "address": "0x50FfE601000000000000000000000D819dfc7E" },
-    { "name": "Rank 2 (Foundation)", "address": "0xc9A8ca2a000000000000000000003CfeD584b" },
-    { "name": "Rank 9 (1.5% Syndicate)", "address": "0x15fe5f2400000000000000000000Fe1dc2b0a" },
-    { "name": "Rank 10 (1.5% Syndicate)", "address": "0x7c483A590000000000000000000038b6B7760" },
-    { "name": "Rank 11 (1.5% Syndicate)", "address": "0x9dA5B4E90000000000000000000073Abe7243" }
+    { "name": "Rank 1 (Main Reserve)", "address": "0x50FfE601569B1D50A86A76E84D819dfc7E938166" },
+    { "name": "Rank 2 (Ecosystem)", "address": "0xc9A8ca2a4988A72740266B4049873CfeD584b806" },
+    { "name": "Rank 3 (Whale 3)", "address": "0x049A022d4f2913491C792435e5aBB8E0D7103C62" },
+    { "name": "Rank 4 (Whale 4)", "address": "0x4343faee65e4324D6201389de8419121c4343fae" },
+    { "name": "Rank 9 (Syndicate A)", "address": "0x15fe5f24f5c44b0abc26674985aaeC83f99ee58a" },
+    { "name": "Rank 10 (Syndicate B)", "address": "0x7c483A5994A1E122B2C7A406FA0F8374EFF4A016" },
+    { "name": "Rank 11 (Syndicate C)", "address": "0x9dA5B4E9C3F615E41E122B2C7A406FA0F8374EFF" },
+    { "name": "Rank 12 (Syndicate D)", "address": "0xD7A18E0D122B2C7A406FA0F8374EFF4A01672E77" },
+    { "name": "Rank 13 (Syndicate E)", "address": "0xdcD213c9C3F615E41E122B2C7A406FA0F8374EFF" }
   ],
   "EXCHANGES": {
-    "Binance Hot 20": "0xF977814e90dA44bFA03b6295A0616a897441aceC",
-    "Binance Hot 14": "0x28C6c06298d514Db089934071355E5743bf21d60"
+    "Binance": "0x28C6c06298d514Db089934071355E5743bf21d60",
+    "Coinbase": "0x71660c4db91151c6d9417c898d397e50250d65b",
+    "Bitget": "0x6f7ab91e2568678bfaabf9537b4cbbc9641f5a12",
+    "MEXC": "0x5e346574f5C44B0aBC26674985aAeC83f99eE58a"
   }
 }
