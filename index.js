@@ -3,92 +3,95 @@ const { ethers } = require("ethers");
 const fetch = require('node-fetch');
 const config = require('./whales.json');
 
-// --- YOUR VERIFIED CREDENTIALS ---
+// --- SETUP ---
 const TG_TOKEN = "8382653788:AAHOyDd0fM57uGoXnjhF6R2WQTffuUzHcpE";
-const TG_CHAT_ID = "6138493107"; // JUNKID's Personal ID
+const TG_CHAT_ID = "6138493107"; 
 const RPC_URL = "https://eth-mainnet.public.blastapi.io"; 
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const provider = new ethers.JsonRpcProvider(RPC_URL);
 
-// 1. Root Endpoint
-app.get('/', (req, res) => {
-    res.send('KAITO WHALE RADAR IS ACTIVE. Use /test to verify connection.');
-});
+app.get('/', (req, res) => res.send('KAITO RADAR ACTIVE 🟢 Monitoring Whales...'));
 
-// 2. THE TEST RUNNER (Visit: https://your-app.onrender.com/test)
-app.get('/test', async (req, res) => {
-    console.log("Manual Test Triggered...");
-    const success = await sendTelegram("🔔 <b>RADAR TEST:</b> System is live. Watching KAITO Ranks 1-50.\n\nStatus: 🟢 ONLINE");
-    if (success) {
-        res.send("✅ Test signal sent to your Telegram!");
-    } else {
-        res.status(500).send("❌ Failed to send Telegram. Check your Bot Token or Chat ID.");
-    }
-});
+// 1. Fetch Real-time USD Price
+async function getKaitoPrice() {
+    try {
+        const response = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${config.KAITO_CONTRACT}`);
+        const data = await response.json();
+        return data.pairs && data.pairs[0] ? parseFloat(data.pairs[0].priceUsd) : 0;
+    } catch (e) { return 0; }
+}
 
-app.listen(PORT, () => {
-    console.log(`Radar Online on Port ${PORT}`);
-    startBlockchainListener();
-});
+// 2. Telegram Sender
+async function sendTelegram(text) {
+    try {
+        await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: TG_CHAT_ID, text, parse_mode: 'HTML', disable_web_page_preview: true })
+        });
+    } catch (e) { console.error("TG Error", e); }
+}
 
+// 3. The Real-time Listener
 async function startBlockchainListener() {
-    const provider = new ethers.JsonRpcProvider(RPC_URL);
     const abi = ["event Transfer(address indexed from, address indexed to, uint256 value)"];
     const contract = new ethers.Contract(config.KAITO_CONTRACT, abi, provider);
 
-    const watchlist = config.TARGET_WHALES.map(w => w.address.toLowerCase());
-    const exchanges = Object.values(config.EXCHANGES).map(a => a.toLowerCase());
+    const whaleAddrs = config.TARGET_WHALES.map(w => w.address.toLowerCase());
+    const exchAddrs = Object.values(config.EXCHANGES).map(a => a.toLowerCase());
+
+    console.log("Radar is live and listening for KAITO movements...");
 
     contract.on("Transfer", async (from, to, value, event) => {
-        try {
-            const fromLower = from.toLowerCase();
-            const toLower = to.toLowerCase();
+        const fromLower = from.toLowerCase();
+        const toLower = to.toLowerCase();
 
-            if (watchlist.includes(fromLower)) {
-                const whale = config.TARGET_WHALES.find(w => w.address.toLowerCase() === fromLower);
-                const amount = ethers.formatUnits(value, 18);
-                
-                if (parseFloat(amount) < 5000) return; 
+        // Check if SENDER is a whale
+        if (whaleAddrs.includes(fromLower)) {
+            const whale = config.TARGET_WHALES.find(w => w.address.toLowerCase() === fromLower);
+            const amountRaw = ethers.formatUnits(value, 18);
+            const amount = parseFloat(amountRaw);
+            
+            if (amount < 5000) return; // Noise filter
 
-                let alertMsg = `🐋 <b>WHALE MOVEMENT</b>\n\n`;
-                alertMsg += `<b>Holder:</b> ${whale.name}\n`;
-                
-                if (exchanges.includes(toLower)) {
-                    alertMsg = `🚨 <b>SELL WARNING: EXCHANGE DEPOSIT</b> 🚨\n\n`;
-                    alertMsg += `<b>To:</b> BINANCE/EXCHANGE\n`;
-                } else {
-                    alertMsg += `<b>To:</b> <code>${to}</code>\n`;
-                }
+            const price = await getKaitoPrice();
+            const usdValue = (amount * price).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+            
+            // "Stealth" Detection: Check if recipient has 0 ETH (likely exchange deposit)
+            const ethBalance = await provider.getBalance(to);
+            
+            let title = "🐋 <b>WHALE MOVEMENT</b>";
+            let destination = `<code>${to.substring(0, 10)}...</code>`;
 
-                alertMsg += `<b>Amount:</b> ${parseFloat(amount).toLocaleString()} KAITO\n`;
-                alertMsg += `<b>Tx:</b> <a href="https://etherscan.io/tx/${event.log.transactionHash}">Etherscan</a>`;
-
-                await sendTelegram(alertMsg);
+            if (exchAddrs.includes(toLower)) {
+                title = "🚨 <b>SELL ALERT: DIRECT EXCHANGE</b> 🚨";
+                const exName = Object.keys(config.EXCHANGES).find(k => config.EXCHANGES[k].toLowerCase() === toLower);
+                destination = `🏛 <b>${exName}</b>`;
+            } else if (whaleAddrs.includes(toLower)) {
+                title = "🔄 <b>INTERNAL ROTATION</b>";
+                const target = config.TARGET_WHALES.find(w => w.address.toLowerCase() === toLower);
+                destination = `👤 <b>${target.name}</b>`;
+            } else if (ethBalance === 0n) {
+                title = "⚠️ <b>POTENTIAL SELL: FRESH WALLET</b>";
+                destination = "❓ <b>Unknown (0 ETH)</b>\n<i>(Probable CEX Deposit)</i>";
             }
-        } catch (e) {
-            console.error("Listener Error:", e);
+
+            let msg = `${title}\n\n`;
+            msg += `<b>Value:</b> 💰 <b>${usdValue}</b>\n`;
+            msg += `<b>Amount:</b> ${amount.toLocaleString()} KAITO\n\n`;
+            msg += `<b>From:</b> ${whale.name}\n`;
+            msg += `<b>To:</b> ${destination}\n\n`;
+            msg += `🔗 <a href="https://etherscan.io/tx/${event.log.transactionHash}">Etherscan</a> | `;
+            msg += `<a href="https://platform.arkhamintelligence.com/explorer/address/${to}">Arkham</a>`;
+
+            await sendTelegram(msg);
         }
     });
 }
 
-async function sendTelegram(text) {
-    const url = `https://api.telegram.org/bot${TG_TOKEN}/sendMessage`;
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                chat_id: TG_CHAT_ID, 
-                text: text, 
-                parse_mode: 'HTML',
-                disable_web_page_preview: true 
-            })
-        });
-        const data = await response.json();
-        return data.ok;
-    } catch (err) {
-        console.log("Telegram Failed:", err);
-        return false;
-    }
-}
+app.listen(PORT, () => {
+    console.log(`Radar active on port ${PORT}`);
+    startBlockchainListener();
+});
