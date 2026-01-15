@@ -1,0 +1,14 @@
+{
+  "KAITO_CONTRACT": "0x31a7d612788277457c03e34ecd4efe4d6e6a8e39",
+  "TARGET_WHALES": [
+    { "name": "Rank 1 (Foundation)", "address": "0x50FfE601000000000000000000000D819dfc7E" },
+    { "name": "Rank 2 (Foundation)", "address": "0xc9A8ca2a000000000000000000003CfeD584b" },
+    { "name": "Rank 9 (1.5% Syndicate)", "address": "0x15fe5f2400000000000000000000Fe1dc2b0a" },
+    { "name": "Rank 10 (1.5% Syndicate)", "address": "0x7c483A590000000000000000000038b6B7760" },
+    { "name": "Rank 11 (1.5% Syndicate)", "address": "0x9dA5B4E90000000000000000000073Abe7243" }
+  ],
+  "EXCHANGES": {
+    "Binance Hot 20": "0xF977814e90dA44bFA03b6295A0616a897441aceC",
+    "Binance Hot 14": "0x28C6c06298d514Db089934071355E5743bf21d60"
+  }
+}
